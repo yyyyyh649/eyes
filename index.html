@@ -277,15 +277,34 @@
         let stream = null;
         let sourceEl = null;
         let animFrame = null;
+        let lastCanvasSize = { w: 0, h: 0 }; // 缓存画布尺寸避免重复设置
+        let updatePending = false; // 防止重复请求更新
         
+        // 缓存DOM元素引用，避免重复查询
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d', { alpha: false }); // 优化性能
+        const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false }); // 优化性能
+        const videoEl = document.getElementById('video');
+        const uploadedImgEl = document.getElementById('uploadedImg');
+        const myopiaRangeEl = document.getElementById('myopiaRange');
+        const astigmatismRangeEl = document.getElementById('astigmatismRange');
+        const axisRangeEl = document.getElementById('axisRange');
+        const splitViewEl = document.getElementById('splitView');
+        const myopiaValEl = document.getElementById('myopiaVal');
+        const astigmatismValEl = document.getElementById('astigmatismVal');
+        const axisValEl = document.getElementById('axisVal');
+        const introPageEl = document.getElementById('introPage');
+        const viewerPageEl = document.getElementById('viewerPage');
         
         // 初始化
         function init() {
             updateLabels();
+            // 使用防抖的resize处理
+            let resizeTimer;
             window.addEventListener('resize', () => {
-                if(mode === 'image') requestUpdate();
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if(mode === 'image') requestUpdate();
+                }, 100);
             });
         }
         
@@ -295,9 +314,10 @@
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
-                document.getElementById('video').srcObject = stream;
-                sourceEl = document.getElementById('video');
+                videoEl.srcObject = stream;
+                sourceEl = videoEl;
                 mode = 'camera';
+                lastCanvasSize = { w: 0, h: 0 }; // 重置缓存
                 switchPage('viewer');
                 loop();
             } catch (e) {
@@ -311,22 +331,22 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                const img = document.getElementById('uploadedImg');
-                img.onload = () => {
-                    sourceEl = img;
+                uploadedImgEl.onload = () => {
+                    sourceEl = uploadedImgEl;
                     mode = 'image';
+                    lastCanvasSize = { w: 0, h: 0 }; // 重置缓存
                     switchPage('viewer');
                     requestUpdate();
                 };
-                img.src = ev.target.result;
+                uploadedImgEl.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         }
         
         // 页面切换
         function switchPage(pageName) {
-            document.getElementById('introPage').style.display = pageName === 'intro' ? 'flex' : 'none';
-            document.getElementById('viewerPage').classList.toggle('active', pageName === 'viewer');
+            introPageEl.style.display = pageName === 'intro' ? 'flex' : 'none';
+            viewerPageEl.classList.toggle('active', pageName === 'viewer');
         }
         
         function goHome() {
@@ -338,16 +358,16 @@
             switchPage('intro');
             
             // 重置参数
-            document.getElementById('myopiaRange').value = 0;
-            document.getElementById('astigmatismRange').value = 0;
-            document.getElementById('axisRange').value = 0;
+            myopiaRangeEl.value = 0;
+            astigmatismRangeEl.value = 0;
+            axisRangeEl.value = 0;
             updateLabels();
         }
 
         function updateLabels() {
-            document.getElementById('myopiaVal').textContent = document.getElementById('myopiaRange').value + '°';
-            document.getElementById('astigmatismVal').textContent = document.getElementById('astigmatismRange').value + '°';
-            document.getElementById('axisVal').textContent = document.getElementById('axisRange').value + '°';
+            myopiaValEl.textContent = myopiaRangeEl.value + '°';
+            astigmatismValEl.textContent = astigmatismRangeEl.value + '°';
+            axisValEl.textContent = axisRangeEl.value + '°';
         }
 
         // 核心渲染循环
@@ -359,7 +379,13 @@
         }
         
         function requestUpdate() {
-            if (mode === 'image') requestAnimationFrame(updateCanvas);
+            // 防止重复请求更新帧
+            if (updatePending || mode !== 'image') return;
+            updatePending = true;
+            requestAnimationFrame(() => {
+                updateCanvas();
+                updatePending = false;
+            });
         }
 
         // --- 核心算法部分 ---
@@ -372,13 +398,18 @@
             
             if (!sw || !sh) return;
             
-            canvas.width = sw;
-            canvas.height = sh;
+            // 只在尺寸变化时重新设置画布大小（避免每帧重置导致的性能损耗）
+            if (lastCanvasSize.w !== sw || lastCanvasSize.h !== sh) {
+                canvas.width = sw;
+                canvas.height = sh;
+                lastCanvasSize = { w: sw, h: sh };
+            }
             
-            const myopia = parseInt(document.getElementById('myopiaRange').value);
-            const astigmatism = parseInt(document.getElementById('astigmatismRange').value);
-            const axis = parseInt(document.getElementById('axisRange').value);
-            const isSplit = document.getElementById('splitView').checked;
+            // 直接读取缓存的DOM元素值
+            const myopia = parseInt(myopiaRangeEl.value);
+            const astigmatism = parseInt(astigmatismRangeEl.value);
+            const axis = parseInt(axisRangeEl.value);
+            const isSplit = splitViewEl.checked;
             
             // 1. 计算物理参数
             // 近视模糊系数：增加系数，使300度也能看清模糊效果 (0.04 是经验值)
@@ -412,7 +443,9 @@
                     // 在同一位置多次绘制图像，每次通过坐标变换进行微小偏移
                     // 这比单纯的缩放真实得多
                     
-                    const passes = 7; // 采样次数，越高越平滑但性能越低
+                    // 自适应采样次数：散光度数越高，需要越多采样来保持平滑
+                    // 低度散光(100度以下)用5次，中度(100-300)用7次，高度(300+)用9次
+                    const passes = astigmatism < 100 ? 5 : (astigmatism < 300 ? 7 : 9);
                     const angleRad = (axis * Math.PI) / 180;
                     
                     // 计算轴向的单位向量 (散光轴向通常与模糊方向垂直，但在模拟器中直接对应即可)
@@ -421,15 +454,19 @@
                     const dx = Math.cos(angleRad) * astigStrength;
                     const dy = Math.sin(angleRad) * astigStrength;
                     
-                    ctx.globalAlpha = 1 / passes; // 降低透明度进行叠加
+                    const alpha = 1 / passes;
+                    ctx.globalAlpha = alpha; // 降低透明度进行叠加
                     
-                    // 保存当前状态（包含filter）
+                    // 预计算偏移量以减少循环内计算
+                    const passesMinusOne = Math.max(passes - 1, 1); // 防止除以零
+                    const scale = 10; // 扩大像素影响范围的系数
+                    
                     // 循环绘制重影
                     for (let i = 0; i < passes; i++) {
                         // 计算当前层偏移: 从 -offset 到 +offset 分布
-                        const progress = (i / (passes - 1)) - 0.5; // -0.5 到 0.5
-                        const offsetX = dx * progress * 10; // *10 是为了扩大像素影响范围
-                        const offsetY = dy * progress * 10;
+                        const progress = (i / passesMinusOne) - 0.5; // -0.5 到 0.5
+                        const offsetX = dx * progress * scale;
+                        const offsetY = dy * progress * scale;
                         
                         ctx.drawImage(sourceEl, offsetX, offsetY, sw, sh);
                     }
