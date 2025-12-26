@@ -3,413 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>近视与散光体验模拟器</title>
+    <title>真实感近视与散光模拟器</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a1a;
+            color: white;
             min-height: 100vh;
         }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
+        /* 首页样式 */
         .intro-page {
-            text-align: center;
-            color: white;
-            padding: 40px 20px;
-        }
-        
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: white;
-            border-radius: 50%;
-            margin: 0 auto 20px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            text-align: center;
         }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-        
-        .subtitle {
-            font-size: 1.2em;
-            opacity: 0.9;
-            margin-bottom: 40px;
-        }
+        .logo { font-size: 60px; margin-bottom: 20px; }
+        h1 { font-size: 2.5em; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .subtitle { font-size: 1.2em; opacity: 0.8; margin-bottom: 40px; max-width: 600px; line-height: 1.6; }
         
         .mode-selector {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
             margin-bottom: 40px;
         }
-        
         .mode-card {
-            background: white;
-            padding: 40px 20px;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        
         .mode-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.2);
         }
-        
-        .mode-card .icon {
-            font-size: 50px;
-            margin-bottom: 15px;
-        }
-        
-        .mode-card h3 {
-            color: #333;
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-        
-        .mode-card p {
-            color: #666;
-        }
-        
-        .info-box {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: left;
-            color: #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .info-box h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .info-box h3 {
-            margin-top: 20px;
-            margin-bottom: 10px;
-            color: #555;
-        }
-        
-        .info-box ul {
-            margin-left: 20px;
-            line-height: 1.8;
-        }
-        
+        .mode-card .icon { font-size: 40px; margin-bottom: 15px; }
+        .mode-card h3 { margin-bottom: 10px; }
+        .mode-card p { font-size: 0.9em; opacity: 0.7; }
+
+        /* 模拟器页面 */
         .viewer-page {
             display: none;
-            min-height: 100vh;
-            background: #1a1a1a;
-        }
-        
-        .viewer-page.active {
-            display: flex;
             flex-direction: column;
+            height: 100vh;
         }
+        .viewer-page.active { display: flex; }
         
         .top-bar {
-            background: #2a2a2a;
+            background: #252525;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom: 1px solid #333;
         }
-        
         .back-btn {
-            background: #667eea;
+            background: #444;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
+            transition: background 0.2s;
         }
+        .back-btn:hover { background: #555; }
         
-        .back-btn:hover {
-            background: #5568d3;
-        }
-        
-        .controls-top {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .checkbox-label {
-            color: white;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        
-        .checkbox-label input {
-            margin-right: 8px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-        
-        .canvas-container {
+        .canvas-wrapper {
             flex: 1;
+            background: #000;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
             overflow: hidden;
+            position: relative;
         }
-        
-        #canvas {
+        canvas {
             max-width: 100%;
             max-height: 100%;
-            border-radius: 10px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            object-fit: contain;
         }
         
-        #video, #uploadedImg {
-            display: none;
+        /* 控制面板 */
+        .controls {
+            background: #252525;
+            padding: 20px;
+            border-top: 1px solid #333;
         }
-        
-        .control-panel {
-            background: #2a2a2a;
-            padding: 30px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        .control-row {
+            display: flex;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            align-items: flex-start;
         }
-        
-        .control-group {
-            margin-bottom: 25px;
-        }
-        
+        .control-group { flex: 1; }
         .control-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .control-label {
-            color: #fff;
-            font-weight: bold;
+            margin-bottom: 12px;
             font-size: 14px;
+            color: #ccc;
         }
-        
-        .control-value {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .value-display {
+            font-family: monospace;
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #4facfe;
         }
-        
-        .degree-value {
-            font-size: 24px;
-            font-weight: bold;
-            min-width: 80px;
-            text-align: right;
-        }
-        
-        .level-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .level-normal { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-        .level-light { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
-        .level-medium { color: #f97316; background: rgba(249, 115, 22, 0.1); }
-        .level-high { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
         
         input[type="range"] {
             width: 100%;
-            height: 8px;
-            border-radius: 5px;
+            height: 6px;
             background: #444;
+            border-radius: 3px;
             outline: none;
             -webkit-appearance: none;
         }
-        
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
+            background: #4facfe;
             border-radius: 50%;
-            background: #667eea;
             cursor: pointer;
+            transition: transform 0.1s;
         }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
         
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            border: none;
-        }
-        
-        .range-labels {
+        .ticks {
             display: flex;
             justify-content: space-between;
-            color: #888;
+            margin-top: 8px;
             font-size: 12px;
-            margin-top: 5px;
+            color: #666;
         }
         
-        #fileInput {
-            display: none;
-        }
-        
-        .info-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .info-modal.active {
+        .toggle-switch {
             display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-content h3 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        .modal-content p {
-            margin-bottom: 15px;
-            line-height: 1.6;
-            color: #333;
-        }
-        
-        .close-modal-btn {
-            width: 100%;
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
+            align-items: center;
+            gap: 10px;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
         }
+        .toggle-switch input { display: none; }
+        .slider-track {
+            width: 40px;
+            height: 20px;
+            background: #444;
+            border-radius: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .slider-track::before {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+        }
+        input:checked + .slider-track { background: #4facfe; }
+        input:checked + .slider-track::before { transform: translateX(20px); }
+
+        #fileInput, #video, #uploadedImg { display: none; }
         
         @media (max-width: 768px) {
-            h1 { font-size: 1.8em; }
             .mode-selector { grid-template-columns: 1fr; }
-            .control-panel { padding: 20px; }
+            .control-row { flex-direction: column; gap: 20px; }
+            h1 { font-size: 1.8em; }
         }
     </style>
 </head>
 <body>
-    <!-- 介绍页面 -->
+
     <div id="introPage" class="intro-page">
-        <div class="container">
-            <div class="logo">👁️</div>
-            <h1>近视与散光体验模拟器</h1>
-            <p class="subtitle">体验不同程度的近视和散光视觉效果,提高护眼意识</p>
-            
-            <div class="mode-selector">
-                <div class="mode-card" onclick="startCamera()">
-                    <div class="icon">📷</div>
-                    <h3>实时摄像头</h3>
-                    <p>使用摄像头实时体验近视效果</p>
-                </div>
-                
-                <div class="mode-card" onclick="document.getElementById('fileInput').click()">
-                    <div class="icon">🖼️</div>
-                    <h3>上传图片</h3>
-                    <p>上传图片体验近视效果</p>
-                </div>
+        <div class="logo">👁️</div>
+        <h1>真实感视力模拟器</h1>
+        <p class="subtitle">基于高斯模糊与多重叠加渲染算法<br>还原真实的近视与散光视觉体验</p>
+        
+        <div class="mode-selector">
+            <div class="mode-card" onclick="startCamera()">
+                <div class="icon">📷</div>
+                <h3>开启摄像头</h3>
+                <p>实时模拟周围环境</p>
             </div>
-            
-            <div class="info-box">
-                <h2>ℹ️ 关于近视</h2>
-                <h3>近视程度分类:</h3>
-                <ul>
-                    <li><strong>轻度近视:</strong> 300度以下</li>
-                    <li><strong>中度近视:</strong> 300-600度</li>
-                    <li><strong>高度近视:</strong> 600度以上</li>
-                </ul>
-                
-                <h3>散光:</h3>
-                <p>散光是由于角膜或晶状体表面不规则导致的,会造成视物重影、变形,需要配戴散光镜片矫正。</p>
-                
-                <h3>预防建议:</h3>
-                <ul>
-                    <li>保持正确的用眼姿势</li>
-                    <li>每用眼40-50分钟休息10分钟</li>
-                    <li>多进行户外活动</li>
-                    <li>定期检查视力</li>
-                </ul>
+            <div class="mode-card" onclick="document.getElementById('fileInput').click()">
+                <div class="icon">🖼️</div>
+                <h3>上传图片</h3>
+                <p>使用照片进行测试</p>
             </div>
         </div>
     </div>
-    
-    <!-- 体验页面 -->
+
     <div id="viewerPage" class="viewer-page">
         <div class="top-bar">
-            <button class="back-btn" onclick="backToHome()">← 返回首页</button>
-            <div class="controls-top">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="splitView" onchange="updateCanvas()">
-                    <span>对比模式</span>
-                </label>
-                <button class="back-btn" onclick="toggleInfo()">ℹ️ 说明</button>
-            </div>
+            <button class="back-btn" onclick="goHome()">← 返回</button>
+            <label class="toggle-switch">
+                <input type="checkbox" id="splitView" onchange="requestUpdate()">
+                <div class="slider-track"></div>
+                <span>对比模式 (左侧正常/右侧模拟)</span>
+            </label>
         </div>
         
-        <div class="canvas-container">
+        <div class="canvas-wrapper">
             <canvas id="canvas"></canvas>
         </div>
         
-        <div class="control-panel">
-            <div class="container">
-                <!-- 近视度数 -->
+        <div class="controls">
+            <div class="control-row">
                 <div class="control-group">
                     <div class="control-header">
-                        <span class="control-label">近视度数</span>
-                        <div class="control-value">
-                            <span class="degree-value" id="myopiaValue">0°</span>
-                            <span class="level-badge" id="myopiaLevel">正常视力</span>
-                        </div>
+                        <span>近视度数 (Myopia)</span>
+                        <span id="myopiaVal" class="value-display">0°</span>
                     </div>
-                    <input type="range" id="myopiaSlider" min="0" max="1000" step="25" value="0" oninput="updateMyopia()">
-                    <div class="range-labels">
+                    <input type="range" id="myopiaRange" min="0" max="1000" step="25" value="0" oninput="updateLabels(); requestUpdate();">
+                    <div class="ticks">
                         <span>0°</span>
                         <span>300°</span>
                         <span>600°</span>
@@ -417,17 +238,13 @@
                     </div>
                 </div>
                 
-                <!-- 散光度数 -->
                 <div class="control-group">
                     <div class="control-header">
-                        <span class="control-label">散光度数</span>
-                        <div class="control-value">
-                            <span class="degree-value" id="astigmatismValue">0°</span>
-                            <span class="level-badge" id="astigmatismLevel">无散光</span>
-                        </div>
+                        <span>散光度数 (Astigmatism)</span>
+                        <span id="astigmatismVal" class="value-display">0°</span>
                     </div>
-                    <input type="range" id="astigmatismSlider" min="0" max="600" step="25" value="0" oninput="updateAstigmatism()">
-                    <div class="range-labels">
+                    <input type="range" id="astigmatismRange" min="0" max="600" step="25" value="0" oninput="updateLabels(); requestUpdate();">
+                    <div class="ticks">
                         <span>0°</span>
                         <span>200°</span>
                         <span>400°</span>
@@ -435,16 +252,13 @@
                     </div>
                 </div>
                 
-                <!-- 散光轴向 -->
-                <div class="control-group" id="angleControl" style="display: none;">
+                <div class="control-group">
                     <div class="control-header">
-                        <span class="control-label">散光轴向</span>
-                        <div class="control-value">
-                            <span class="degree-value" id="angleValue">0°</span>
-                        </div>
+                        <span>散光轴向 (Axis)</span>
+                        <span id="axisVal" class="value-display">0°</span>
                     </div>
-                    <input type="range" id="angleSlider" min="0" max="180" step="5" value="0" oninput="updateAngle()">
-                    <div class="range-labels">
+                    <input type="range" id="axisRange" min="0" max="180" step="1" value="0" oninput="updateLabels(); requestUpdate();">
+                    <div class="ticks">
                         <span>0°</span>
                         <span>90°</span>
                         <span>180°</span>
@@ -453,302 +267,220 @@
             </div>
         </div>
     </div>
-    
-    <!-- 信息模态框 -->
-    <div id="infoModal" class="info-modal" onclick="toggleInfo()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>视觉效果说明</h3>
-            <p><strong>近视:</strong> 度数越高,远处物体越模糊。近视眼看近处相对清晰,看远处模糊。</p>
-            <p><strong>散光:</strong> 造成视物重影、拉伸变形的效果,轴向决定变形方向。</p>
-            <p><strong>对比模式:</strong> 左侧显示正常视力,右侧显示近视效果,便于直观对比。</p>
-            <p style="font-size: 12px; color: #666; margin-top: 20px;">注: 此模拟器仅供科普体验,实际视觉感受因人而异。</p>
-            <button class="close-modal-btn" onclick="toggleInfo()">关闭</button>
-        </div>
-    </div>
-    
-    <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
+
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
     <video id="video" autoplay playsinline></video>
-    <img id="uploadedImg" />
-    
+    <img id="uploadedImg">
+
     <script>
-        let currentMode = 'intro';
+        let mode = null; // 'camera' or 'image'
         let stream = null;
-        let animationId = null;
-        let sourceElement = null;
+        let sourceEl = null;
+        let animFrame = null;
         
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const video = document.getElementById('video');
-        const uploadedImg = document.getElementById('uploadedImg');
+        const ctx = canvas.getContext('2d', { alpha: false }); // 优化性能
+        
+        // 初始化
+        function init() {
+            updateLabels();
+            window.addEventListener('resize', () => {
+                if(mode === 'image') requestUpdate();
+            });
+        }
         
         // 启动摄像头
         async function startCamera() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
-                
-                video.srcObject = stream;
-                await video.play();
-                
-                sourceElement = video;
-                currentMode = 'camera';
-                showViewer();
-                startProcessing();
-            } catch (err) {
-                alert('无法访问摄像头,请检查权限设置\n\n错误信息: ' + err.message);
-                console.error('Camera error:', err);
+                document.getElementById('video').srcObject = stream;
+                sourceEl = document.getElementById('video');
+                mode = 'camera';
+                switchPage('viewer');
+                loop();
+            } catch (e) {
+                alert('无法访问摄像头: ' + e.message);
             }
         }
         
-        // 处理图片上传
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
+        // 处理文件上传
+        function handleFile(e) {
+            const file = e.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
-            reader.onload = function(e) {
-                uploadedImg.onload = function() {
-                    sourceElement = uploadedImg;
-                    currentMode = 'image';
-                    showViewer();
-                    updateCanvas();
+            reader.onload = (ev) => {
+                const img = document.getElementById('uploadedImg');
+                img.onload = () => {
+                    sourceEl = img;
+                    mode = 'image';
+                    switchPage('viewer');
+                    requestUpdate();
                 };
-                uploadedImg.src = e.target.result;
+                img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         }
         
-        // 显示体验页面
-        function showViewer() {
-            document.getElementById('introPage').style.display = 'none';
-            document.getElementById('viewerPage').classList.add('active');
+        // 页面切换
+        function switchPage(pageName) {
+            document.getElementById('introPage').style.display = pageName === 'intro' ? 'flex' : 'none';
+            document.getElementById('viewerPage').classList.toggle('active', pageName === 'viewer');
         }
         
-        // 返回首页
-        function backToHome() {
-            stopCamera();
-            document.getElementById('introPage').style.display = 'block';
-            document.getElementById('viewerPage').classList.remove('active');
-            currentMode = 'intro';
-            
-            // 重置滑块
-            document.getElementById('myopiaSlider').value = 0;
-            document.getElementById('astigmatismSlider').value = 0;
-            document.getElementById('angleSlider').value = 0;
-            document.getElementById('splitView').checked = false;
-            updateMyopia();
-            updateAstigmatism();
-            updateAngle();
-        }
-        
-        // 停止摄像头
-        function stopCamera() {
+        function goHome() {
             if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(t => t.stop());
                 stream = null;
             }
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            switchPage('intro');
+            
+            // 重置参数
+            document.getElementById('myopiaRange').value = 0;
+            document.getElementById('astigmatismRange').value = 0;
+            document.getElementById('axisRange').value = 0;
+            updateLabels();
+        }
+
+        function updateLabels() {
+            document.getElementById('myopiaVal').textContent = document.getElementById('myopiaRange').value + '°';
+            document.getElementById('astigmatismVal').textContent = document.getElementById('astigmatismRange').value + '°';
+            document.getElementById('axisVal').textContent = document.getElementById('axisRange').value + '°';
+        }
+
+        // 核心渲染循环
+        function loop() {
+            if (mode === 'camera') {
+                updateCanvas();
+                animFrame = requestAnimationFrame(loop);
             }
         }
         
-        // 开始处理帧
-        function startProcessing() {
-            function processFrame() {
-                if (currentMode === 'camera' && video.readyState === video.HAVE_ENOUGH_DATA) {
-                    updateCanvas();
-                }
-                animationId = requestAnimationFrame(processFrame);
-            }
-            processFrame();
+        function requestUpdate() {
+            if (mode === 'image') requestAnimationFrame(updateCanvas);
         }
-        
-        // 更新画布
+
+        // --- 核心算法部分 ---
         function updateCanvas() {
-            if (!sourceElement) return;
+            if (!sourceEl) return;
             
-            const myopia = parseInt(document.getElementById('myopiaSlider').value);
-            const astigmatism = parseInt(document.getElementById('astigmatismSlider').value);
-            const angle = parseInt(document.getElementById('angleSlider').value);
-            const splitView = document.getElementById('splitView').checked;
+            // 获取尺寸
+            const sw = mode === 'camera' ? sourceEl.videoWidth : sourceEl.naturalWidth;
+            const sh = mode === 'camera' ? sourceEl.videoHeight : sourceEl.naturalHeight;
             
-            // 设置画布尺寸
-            if (currentMode === 'camera') {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-            } else {
-                canvas.width = uploadedImg.naturalWidth;
-                canvas.height = uploadedImg.naturalHeight;
+            if (!sw || !sh) return;
+            
+            canvas.width = sw;
+            canvas.height = sh;
+            
+            const myopia = parseInt(document.getElementById('myopiaRange').value);
+            const astigmatism = parseInt(document.getElementById('astigmatismRange').value);
+            const axis = parseInt(document.getElementById('axisRange').value);
+            const isSplit = document.getElementById('splitView').checked;
+            
+            // 1. 计算物理参数
+            // 近视模糊系数：增加系数，使300度也能看清模糊效果 (0.04 是经验值)
+            const blurRadius = myopia * 0.04; 
+            
+            // 散光偏移量：这个决定重影的距离
+            // 真实的散光是点扩散成线，我们通过多重采样来模拟
+            const astigStrength = astigmatism * 0.08; 
+            
+            // 绘制背景（黑色）
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, sw, sh);
+
+            // 辅助绘图函数：处理单边渲染
+            function drawScene(isBlurred) {
+                if (!isBlurred) {
+                    ctx.filter = 'none';
+                    ctx.drawImage(sourceEl, 0, 0, sw, sh);
+                    return;
+                }
+
+                // 步骤A: 应用近视 (高斯模糊)
+                // 使用 filter 属性是最快的方法
+                // 如果散光很高，近视模糊应该稍微减弱一点点，否则全都糊成一团看不出重影
+                // 但物理上它们是叠加的。
+                ctx.filter = `blur(${blurRadius}px)`;
+
+                // 步骤B: 应用散光 (方向性重影)
+                if (astigmatism > 0) {
+                    // 我们使用 "Accumulation Buffer" 的思路
+                    // 在同一位置多次绘制图像，每次通过坐标变换进行微小偏移
+                    // 这比单纯的缩放真实得多
+                    
+                    const passes = 7; // 采样次数，越高越平滑但性能越低
+                    const angleRad = (axis * Math.PI) / 180;
+                    
+                    // 计算轴向的单位向量 (散光轴向通常与模糊方向垂直，但在模拟器中直接对应即可)
+                    // 注意：医学散光轴向通常指“不模糊”的那个轴，或者“最平”的轴
+                    // 这里我们简化：轴向即为“拖影方向”
+                    const dx = Math.cos(angleRad) * astigStrength;
+                    const dy = Math.sin(angleRad) * astigStrength;
+                    
+                    ctx.globalAlpha = 1 / passes; // 降低透明度进行叠加
+                    
+                    // 保存当前状态（包含filter）
+                    // 循环绘制重影
+                    for (let i = 0; i < passes; i++) {
+                        // 计算当前层偏移: 从 -offset 到 +offset 分布
+                        const progress = (i / (passes - 1)) - 0.5; // -0.5 到 0.5
+                        const offsetX = dx * progress * 10; // *10 是为了扩大像素影响范围
+                        const offsetY = dy * progress * 10;
+                        
+                        ctx.drawImage(sourceEl, offsetX, offsetY, sw, sh);
+                    }
+                    
+                    // 恢复
+                    ctx.globalAlpha = 1.0;
+                } else {
+                    // 只有近视，没有散光
+                    ctx.drawImage(sourceEl, 0, 0, sw, sh);
+                }
+                ctx.filter = 'none';
             }
-            
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            if (splitView) {
-                // 分屏模式
-                const halfWidth = width / 2;
+
+            // 分屏逻辑
+            if (isSplit) {
+                const mid = sw / 2;
                 
-                // 左侧正常
+                // 左侧：清晰
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(0, 0, halfWidth, height);
+                ctx.rect(0, 0, mid, sh);
                 ctx.clip();
-                ctx.drawImage(sourceElement, 0, 0, width, height);
+                drawScene(false);
                 ctx.restore();
                 
-                // 右侧模糊
+                // 右侧：模糊
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(halfWidth, 0, halfWidth, height);
+                ctx.rect(mid, 0, mid, sh);
                 ctx.clip();
-                
-                const blurAmount = (myopia / 100) * 0.8;
-                ctx.filter = `blur(${blurAmount}px)`;
-                ctx.drawImage(sourceElement, 0, 0, width, height);
-                ctx.filter = 'none';
-                
-                // 散光效果
-                if (astigmatism > 0) {
-                    ctx.globalAlpha = 0.3;
-                    ctx.filter = `blur(${astigmatism / 60}px)`;
-                    ctx.save();
-                    ctx.translate(halfWidth + halfWidth/2, height/2);
-                    ctx.rotate((angle * Math.PI) / 180);
-                    ctx.scale(1, 1 + astigmatism / 300);
-                    ctx.translate(-(halfWidth + halfWidth/2), -height/2);
-                    ctx.drawImage(sourceElement, 0, 0, width, height);
-                    ctx.restore();
-                    ctx.globalAlpha = 1;
-                    ctx.filter = 'none';
-                }
-                
+                // 稍微平移一下右侧内容的绘制原点，防止重影画到左边去？
+                // 其实 clip 会自动处理，但为了重影不穿帮，我们可以先画满再切，或者接受边界溢出
+                // 这里直接画，clip 会截断
+                drawScene(true);
                 ctx.restore();
                 
                 // 分割线
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(halfWidth, 0);
-                ctx.lineTo(halfWidth, height);
+                ctx.moveTo(mid, 0);
+                ctx.lineTo(mid, sh);
                 ctx.stroke();
                 
-                // 标签
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(10, 10, 100, 35);
-                ctx.fillRect(halfWidth + 10, 10, 100, 35);
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.fillText('正常视力', 20, 33);
-                ctx.fillText('近视模拟', halfWidth + 20, 33);
-                
             } else {
-                // 全屏模糊
-                const blurAmount = (myopia / 100) * 0.8;
-                ctx.filter = `blur(${blurAmount}px)`;
-                ctx.drawImage(sourceElement, 0, 0, width, height);
-                ctx.filter = 'none';
-                
-                // 散光效果
-                if (astigmatism > 0) {
-                    ctx.globalAlpha = 0.3;
-                    ctx.filter = `blur(${astigmatism / 60}px)`;
-                    ctx.save();
-                    ctx.translate(width/2, height/2);
-                    ctx.rotate((angle * Math.PI) / 180);
-                    ctx.scale(1, 1 + astigmatism / 300);
-                    ctx.translate(-width/2, -height/2);
-                    ctx.drawImage(sourceElement, 0, 0, width, height);
-                    ctx.restore();
-                    ctx.globalAlpha = 1;
-                    ctx.filter = 'none';
-                }
+                // 全屏模式
+                drawScene(true);
             }
         }
         
-        // 更新近视度数
-        function updateMyopia() {
-            const value = parseInt(document.getElementById('myopiaSlider').value);
-            document.getElementById('myopiaValue').textContent = value + '°';
-            
-            let level, className;
-            if (value === 0) {
-                level = '正常视力';
-                className = 'level-normal';
-            } else if (value < 300) {
-                level = '轻度近视';
-                className = 'level-light';
-            } else if (value < 600) {
-                level = '中度近视';
-                className = 'level-medium';
-            } else {
-                level = '高度近视';
-                className = 'level-high';
-            }
-            
-            const badge = document.getElementById('myopiaLevel');
-            badge.textContent = level;
-            badge.className = 'level-badge ' + className;
-            
-            document.getElementById('myopiaValue').className = 'degree-value ' + className;
-            
-            updateCanvas();
-        }
-        
-        // 更新散光度数
-        function updateAstigmatism() {
-            const value = parseInt(document.getElementById('astigmatismSlider').value);
-            document.getElementById('astigmatismValue').textContent = value + '°';
-            
-            let level, className;
-            if (value === 0) {
-                level = '无散光';
-                className = 'level-normal';
-            } else if (value < 200) {
-                level = '轻度散光';
-                className = 'level-light';
-            } else if (value < 400) {
-                level = '中度散光';
-                className = 'level-medium';
-            } else {
-                level = '重度散光';
-                className = 'level-high';
-            }
-            
-            const badge = document.getElementById('astigmatismLevel');
-            badge.textContent = level;
-            badge.className = 'level-badge ' + className;
-            
-            document.getElementById('astigmatismValue').className = 'degree-value ' + className;
-            
-            // 显示/隐藏轴向控制
-            document.getElementById('angleControl').style.display = value > 0 ? 'block' : 'none';
-            
-            updateCanvas();
-        }
-        
-        // 更新散光轴向
-        function updateAngle() {
-            const value = parseInt(document.getElementById('angleSlider').value);
-            document.getElementById('angleValue').textContent = value + '°';
-            updateCanvas();
-        }
-        
-        // 切换信息模态框
-        function toggleInfo() {
-            const modal = document.getElementById('infoModal');
-            modal.classList.toggle('active');
-        }
-        
-        // 页面卸载时停止摄像头
-        window.addEventListener('beforeunload', stopCamera);
+        init();
     </script>
 </body>
 </html>
